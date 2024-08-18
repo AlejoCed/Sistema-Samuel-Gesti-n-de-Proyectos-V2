@@ -19,6 +19,10 @@ class ProjectResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-briefcase';
 
+    public static ?string  $navigationLabel = 'Proyectos';
+
+    
+
     public static function form(Form $form): Form
     {
         return $form
@@ -108,7 +112,7 @@ class ProjectResource extends Resource
             ])
             ->actions([
                 Tables\Actions\ViewAction::make(),
-                Tables\Actions\EditAction::make(),
+                Tables\Actions\EditAction::make()->visible(fn (Project $record) => auth()->user()->can('edit projects')),
                 Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([
