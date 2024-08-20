@@ -7,11 +7,19 @@ use App\Filament\Resources\ProjectResource\RelationManagers;
 use App\Models\Project;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Illuminate\Foundation\Auth\User as Authenticatable;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\ProjectsExport;
+use Barryvdh\DomPDF\Facade as PDF;
+use Barryvdh\DomPDF\Facade\Pdf as FacadePdf;
+use Illuminate\Support\Facades\View;
+use Illuminate\Contracts\Auth;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+
 
 class ProjectResource extends Resource
 {
@@ -20,6 +28,10 @@ class ProjectResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-briefcase';
 
     public static ?string  $navigationLabel = 'Proyectos';
+
+    protected static ?string $label = 'Proyecto';
+
+    protected static ?string $navigationGroup = 'Gestión';
 
     
 
@@ -111,13 +123,34 @@ class ProjectResource extends Resource
                 //
             ])
             ->actions([
+                
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make()->visible(fn (Project $record) => auth()->user()->can('edit projects')),
-                Tables\Actions\DeleteAction::make(),
+                Tables\Actions\DeleteAction::make()->visible(fn (Project $record) => auth()->user()->can('delete projects')),
+                Tables\Actions\Action::make('export')
+                    ->label('Exportar a Excel')
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->action(function () {
+                        return Excel::download(new ProjectsExport, 'projects.xlsx');
+                    }),
+                // Tables\Actions\Action::make('exportPdf')
+                //     ->label('Exportar a PDF')
+                //     ->icon('heroicon-o-arrow-down-tray')
+                //     ->action(function (Project $record) {
+                //         $html = self::generateProjectPDF($record);
+                //         $pdf = FacadePdf::loadHTML($html);
+                //         return $pdf->download("project_{$record->id}.pdf");
+                //     }),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\Action::make('export')
+                    ->label('Exportar a Excel')
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->action(function () {
+                        return Excel::download(new ProjectsExport, 'projects.xlsx');
+                    }),
                 ]),
             ]);
     }
@@ -128,6 +161,21 @@ class ProjectResource extends Resource
             //
         ];
     }
+
+    protected function generateProjectPDF(Project $project)
+    {
+        // Aquí puedes generar el contenido HTML del PDF directamente en el Resource
+        $html = '
+            <h1>Detalles del Proyecto</h1>
+            <p>Nombre: ' . $project->nombre . '</p>
+            <p>Status: ' . $project->status . '</p>
+            <p>Presupuesto: ' . $project->budget . '</p>
+            <!-- Agrega más campos según sea necesario -->
+        ';
+
+        return $html;
+    }
+
 
     public static function getPages(): array
     {

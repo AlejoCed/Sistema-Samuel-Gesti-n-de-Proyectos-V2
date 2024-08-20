@@ -22,14 +22,18 @@ class CustomerResource extends Resource
 
     public static ?string  $navigationLabel = 'Clientes';
 
+    protected static ?string $label = 'Clientes';
+
+    protected static ?string $navigationGroup = 'Gestión';
+
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
                 Forms\Components\TextInput::make('name')->required()->label('nombre'),
                 Forms\Components\TextInput::make('email')->email()->required()->label('correo'),
-                Forms\Components\FileUpload::make('image')->required()->multiple()
-                ->openable()->multiple()
+                Forms\Components\FileUpload::make('image')->required()
+                ->openable()->image()   
             ]);
     }
 
@@ -37,8 +41,8 @@ class CustomerResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('name'),
-            Tables\Columns\TextColumn::make('email'),
+                Tables\Columns\TextColumn::make('name')->searchable(),
+            Tables\Columns\TextColumn::make('email')->searchable(),
             Tables\Columns\ImageColumn::make('image'),
             ])
             ->filters([
