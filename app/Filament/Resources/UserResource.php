@@ -34,7 +34,8 @@ class UserResource extends Resource
                     Forms\Components\TextInput::make('email')
                         ->email()
                         ->required()
-                        ->label('Correo'),
+                        ->label('Correo')
+                        ->unique(ignoreRecord: true),
                     Forms\Components\TextInput::make('password')
                         ->password()
                         ->hiddenOn('edit')

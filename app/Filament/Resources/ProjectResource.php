@@ -33,6 +33,27 @@ class ProjectResource extends Resource
 
     protected static ?string $navigationGroup = 'Gestión';
 
+    public static function getEloquentQuery(): Builder
+    {
+        $user = auth()->user();
+
+        // Si el usuario tiene el rol de cliente
+        if ($user->hasRole('Cliente')) {
+            return parent::getEloquentQuery()
+                ->whereHas('Customer', function ($query) use ($user) {
+                    // Filtra los proyectos cuyo cliente coincida con el nombre del usuario
+                    $query->where('name', $user->name);
+                });
+        }
+
+        // Si no es un cliente, retorna todos los proyectos
+        return parent::getEloquentQuery();
+    }
+
+    
+
+
+
     
 
     public static function form(Form $form): Form
@@ -41,42 +62,69 @@ class ProjectResource extends Resource
             ->schema([
                 Forms\Components\TextInput::make('nombre')
                     ->required()
-                    ->maxLength(255),
+                    ->maxLength(255)
+                    ->disabled(fn() => in_array(auth()->user()->getRoleNames()->first(), ['Cliente', 'Técnico', 'Coordinador']))
+                    ,
 
                 Forms\Components\Select::make('customer_id')
                     ->label('Cliente')
                     ->relationship('customer', 'name')
-                    ->required(),
+                    ->required()
+                    ->disabled(fn() => in_array(auth()->user()->getRoleNames()->first(), ['Cliente', 'Técnico', 'Coordinador']))
+                    ,
 
                 Forms\Components\Select::make('status')
+                    ->label('Estado del Proyecto')
                     ->options([
                         'no iniciado' => 'No Iniciado',
                         'en curso' => 'En Curso',
                         'terminado' => 'Terminado',
                     ])
-                    ->required(),
+                    ->required()
+                    ->disabled(fn() => in_array(auth()->user()->getRoleNames()->first(), ['Cliente', 'Técnico', 'Coordinador']))
+                    ,
 
                 Forms\Components\TextInput::make('budget')
+                    ->label('Presupuesto')
                     ->numeric()
-                    ->required(),
+                    ->required()
+                    ->minValue(1)
+                    ->visible(fn (Project $record) => auth()->user()->can('view budget'))
+
+                    ->disabled(fn() => in_array(auth()->user()->getRoleNames()->first(), ['Cliente', 'Técnico', 'Coordinador']))
+                    ,
                     
 
                 Forms\Components\FileUpload::make('quote_files')
+                    ->label('Archivos de Cotización')
                     ->multiple()
                     ->directory('uploads/quote_files')
                     ->preserveFilenames()
-                    ->acceptedFileTypes(['application/pdf', 'image/*'])
-                    ->openable()->uploadingMessage('Subiendo archivo de cotización...'),
+                    ->acceptedFileTypes(['application/pdf', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
+                    'application/vnd.ms-excel', ])
+                    ->openable()->uploadingMessage('Subiendo archivo de cotización...')
+                    ->disabled(fn() => auth()->user()->hasRole('Cliente'))
+                    ->visible(fn (Project $record) => auth()->user()->can('view quotes'))
+                    ,
 
                 Forms\Components\FileUpload::make('plan_files')
+                    ->label('Archivos de Planos')
                     ->multiple()
                     ->directory('uploads/plan_files')
                     ->preserveFilenames()
-                    ->acceptedFileTypes(['application/pdf', 'image/*'])
-                    ->openable()->uploadingMessage('Subiendo planos...') ,
+                    ->acceptedFileTypes(['application/pdf', 'image/*', 'application/acad', // .dwg
+                    'application/dxf', // .dxf
+                    'image/vnd.dwg', // otra variante para .dwg
+                    'application/x-dwg'])
+                    ->openable()->uploadingMessage('Subiendo planos...')
+                    ->disabled(fn() => auth()->user()->hasRole('Técnico'))
+                     ,
 
                 Forms\Components\Textarea::make('notes')
-                    ->rows(3),
+                    ->label('Notas')
+                    ->rows(3)
+                    ->disabled(fn() => auth()->user()->hasRole('Cliente'))
+                    ->visible(fn (Project $record) => auth()->user()->can('view minutes')),
             ]);
     }
 
@@ -124,8 +172,8 @@ class ProjectResource extends Resource
             ])
             ->actions([
                 
-                Tables\Actions\ViewAction::make(),
-                Tables\Actions\EditAction::make()->visible(fn (Project $record) => auth()->user()->can('edit projects')),
+                Tables\Actions\ViewAction::make()->label('Ver'),
+                Tables\Actions\EditAction::make()->label('Editar'),
                 Tables\Actions\DeleteAction::make()->visible(fn (Project $record) => auth()->user()->can('delete projects')),
                 Tables\Actions\Action::make('export')
                     ->label('Exportar a Excel')

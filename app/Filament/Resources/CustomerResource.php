@@ -31,7 +31,10 @@ class CustomerResource extends Resource
         return $form
             ->schema([
                 Forms\Components\TextInput::make('name')->required()->label('nombre'),
-                Forms\Components\TextInput::make('email')->email()->required()->label('correo'),
+                Forms\Components\TextInput::make('email')->email()->required()->label('correo')
+                ->unique(function (Builder $query, string $attribute, mixed $requestValue): Builder {
+                    return $query->where('email', $requestValue);
+                }),
                 Forms\Components\FileUpload::make('image')->required()
                 ->openable()->image()   
             ]);
@@ -41,7 +44,7 @@ class CustomerResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('name')->searchable(),
+                Tables\Columns\TextColumn::make('name')->searchable()->label('Nombre'),
             Tables\Columns\TextColumn::make('email')->searchable(),
             Tables\Columns\ImageColumn::make('image'),
             ])
