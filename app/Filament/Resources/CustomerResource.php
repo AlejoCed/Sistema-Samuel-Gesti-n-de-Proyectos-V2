@@ -45,15 +45,19 @@ class CustomerResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('name')->searchable()->label('Nombre'),
-            Tables\Columns\TextColumn::make('email')->searchable(),
-            Tables\Columns\ImageColumn::make('image'),
+            Tables\Columns\TextColumn::make('email')->searchable()->label('Correo'),
+            Tables\Columns\ImageColumn::make('image')->label('Imagen'),
             ])
             ->filters([
                 //
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make()
+                Tables\Actions\EditAction::make()->label('Editar'),
+                Tables\Actions\DeleteAction::make()->label('Borrar'),Tables\Actions\Action::make('sendEmail')
+                ->label('Enviar Correo')
+                ->icon('heroicon-o-envelope')
+                ->url(fn ($record) => 'mailto:' . $record->email) // El enlace mailto
+                ->openUrlInNewTab(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

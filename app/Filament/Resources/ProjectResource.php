@@ -138,7 +138,8 @@ class ProjectResource extends Resource
                 Tables\Columns\TextColumn::make('budget')->label('Presupuesto'),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
-                    ->label('Creado en'),
+                    ->label('Creado en')
+                    ->toggleable(isToggledHiddenByDefault: true),
 
                 // Columna para mostrar archivos de cotización
                 Tables\Columns\TextColumn::make('quote_files')

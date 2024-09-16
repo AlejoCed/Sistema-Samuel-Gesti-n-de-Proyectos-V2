@@ -27,6 +27,7 @@ class RoleResource extends Resource
             ->schema([
                 Forms\Components\TextInput::make('name')
                     ->required()
+                    ->label('Nombre')
                     ->maxLength(255),
                 Forms\Components\TextInput::make('guard_name')
                     ->required()
@@ -39,14 +40,16 @@ class RoleResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('name')
-                    ->searchable(),
+                    ->searchable()->label('Nombre'),
                 Tables\Columns\TextColumn::make('guard_name')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('created_at')
+                    ->label('Creado en:')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('updated_at')
+                    ->label('Actualizado en:')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
@@ -55,7 +58,8 @@ class RoleResource extends Resource
                 //
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
+                Tables\Actions\EditAction::make()->label('Editar'),
+                Tables\Actions\ViewAction::make()->label('Ver')
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

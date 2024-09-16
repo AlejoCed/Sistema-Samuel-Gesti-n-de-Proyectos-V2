@@ -21,6 +21,10 @@ class UserResource extends Resource
     protected static ?string $navigationGroup = 'Administración';
     protected static ?string $model = User::class;
 
+    protected static ?string $navigationLabel = 'Usuarios';
+
+    protected static ?string $label = 'Usuarios';
+
     protected static ?string $navigationIcon = 'heroicon-o-user-circle';
 
     public static function form(Form $form): Form
@@ -49,10 +53,10 @@ class UserResource extends Resource
     {
         return $table
         ->columns([
-            Tables\Columns\TextColumn::make('name'),
-            Tables\Columns\TextColumn::make('email'),
-            Tables\Columns\TextColumn::make('email_verified_at'),
-            Tables\Columns\TextColumn::make('roles.name'),
+            Tables\Columns\TextColumn::make('name')->label('Nombre'),
+            Tables\Columns\TextColumn::make('email')->label('Correo'),
+            // Tables\Columns\TextColumn::make('email_verified_at'),
+            Tables\Columns\TextColumn::make('roles.name')->label('Rol Asignado'),
             
             // ...
         ])
@@ -60,20 +64,21 @@ class UserResource extends Resource
             Tables\Filters\Filter::make('verified')
                 ->query(fn (Builder $query): Builder => $query->whereNotNull('email_verified_at')),
             // ...
+            
         ])
             ->actions([
                 Tables\Actions\EditAction::make()->label('Editar'),
                 Tables\Actions\DeleteAction::make()->label('Eliminar'),
-                Tables\Actions\Action::make('Verify')->label('Verificar')->icon('heroicon-m-check-badge')
-                ->action(function(User $user){
-                    $user->email_verified_at = Date('Y-m-d H:i:s');
-                    $user->save();  
-                }),
-                Tables\Actions\Action::make('Unverify')->label('Olvidar')->icon('heroicon-m-x-circle')
-                ->action(function(User $user){
-                    $user->email_verified_at = null;
-                    $user->save();  
-                })
+                // Tables\Actions\Action::make('Verify')->label('Verificar')->icon('heroicon-m-check-badge')
+                // ->action(function(User $user){
+                //     $user->email_verified_at = Date('Y-m-d H:i:s');
+                //     $user->save();  
+                // }),
+                // Tables\Actions\Action::make('Unverify')->label('Olvidar')->icon('heroicon-m-x-circle')
+                // ->action(function(User $user){
+                //     $user->email_verified_at = null;
+                //     $user->save();  
+                // })
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
