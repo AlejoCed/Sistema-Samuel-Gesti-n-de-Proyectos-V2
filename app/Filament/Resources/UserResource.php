@@ -45,6 +45,12 @@ class UserResource extends Resource
                         ->hiddenOn('edit')
                         ->required()
                         ->label('Contraseña'),
+                    Forms\Components\FileUpload::make('image')
+                        ->label('Imagen de perfil')
+                        ->directory('uploads/user_images')
+                        ->preserveFilenames()
+                        ->image() // Esto asegura que solo permita subir imágenes
+                        ->nullable(),
                     Select::make('roles')->multiple()->relationship('roles','name')
             ]);
     }
@@ -55,6 +61,9 @@ class UserResource extends Resource
         ->columns([
             Tables\Columns\TextColumn::make('name')->label('Nombre'),
             Tables\Columns\TextColumn::make('email')->label('Correo'),
+            Tables\Columns\ImageColumn::make('image')
+            ->label('Imagen')
+            ->size(50, 50),
             // Tables\Columns\TextColumn::make('email_verified_at'),
             Tables\Columns\TextColumn::make('roles.name')->label('Rol Asignado'),
             
