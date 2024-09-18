@@ -49,7 +49,9 @@ class ProjectResource extends Resource
         }
 
         if ($user->hasRole('Técnico')) {
-            return parent::getEloquentQuery()->where('technician_id', $user->id);
+            return parent::getEloquentQuery()->whereHas('technicians', function ($query) use ($user) {
+                $query->where('users.id', $user->id);
+            });
         }
 
         // Si el usuario tiene el rol de "coordinador", filtrar los proyectos donde está asignado como coordinador.
@@ -156,6 +158,7 @@ class ProjectResource extends Resource
                         })->pluck('name', 'id')->toArray();
                     })
                     ->label('Seleccionar Técnicos')
+                    ->disabled(fn () => !auth()->user()->hasRole('Gerente'))
                     
                     ,
 
@@ -166,7 +169,8 @@ class ProjectResource extends Resource
                     ->options(
                         User::role('Coordinador')->pluck('name', 'id') // Solo usuarios con el rol de coordinador
                     )
-                    ->required(),
+                    ->required()
+                    ->disabled(fn () => !auth()->user()->hasRole('Gerente')), // Solo editable para Gerentes
                 Forms\Components\Textarea::make('notes')
                     ->label('Notas')
                     ->rows(3)
@@ -182,19 +186,19 @@ class ProjectResource extends Resource
         // ->query(function (Builder $query) {
         //     $user = auth()->user();
 
-        //     if ($user->hasRole('cliente')) {
-        //         return $query->where('customer_id', $user->customer->id);
-        //     }
+        //     // if ($user->hasRole('cliente')) {
+        //     //     return $query->where('customer_id', $user->customer->id);
+        //     // }
 
-        //     if ($user->hasRole('técnico')) {
-        //         return $query->whereHas('technicians', function ($query) use ($user) {
-        //             $query->where('id', $user->id);
-        //         });
-        //     }
+        //     // if ($user->hasRole('Técnico')) {
+        //     //     return $query->whereHas('technicians', function ($query) use ($user) {
+        //     //         $query->where('id', $user->id);
+        //     //     });
+        //     // }
 
-        //     if ($user->hasRole('coordinador')) {
-        //         return $query->where('assigned_coordinator', $user->id);
-        //     }
+        //     // if ($user->hasRole('coordinador')) {
+        //     //     return $query->where('assigned_coordinator', $user->id);
+        //     // }
 
         //     return $query;
         // })
