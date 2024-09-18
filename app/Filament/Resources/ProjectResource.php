@@ -16,6 +16,7 @@ use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\ProjectsExport;
 use Barryvdh\DomPDF\Facade as PDF;
 use Barryvdh\DomPDF\Facade\Pdf as FacadePdf;
+use Filament\Forms\Components\MultiSelect;
 use Illuminate\Support\Facades\View;
 use Illuminate\Contracts\Auth;
 use Illuminate\Database\Eloquent\Builder;
@@ -138,13 +139,25 @@ class ProjectResource extends Resource
                     ->label('Informes y Reportes'),
 
                     // Campo "Técnico Asignado" (solo usuarios con rol de técnico)
-                    Forms\Components\Select::make('technician_id')
-                    ->label('Técnico Asignado')
-                    ->relationship('technician', 'name')
-                    ->options(
-                        User::role('Técnico')->pluck('name', 'id') // Solo usuarios con el rol de técnico
-                    )
-                    ->required(),
+                    // Forms\Components\Select::make('technician_id')
+                    // ->label('Técnico Asignado')
+                    // ->relationship('technician', 'name')
+                    // ->options(
+                    //     User::role('Técnico')->pluck('name', 'id') // Solo usuarios con el rol de técnico
+                    // )
+                    // ->required()
+
+                    Forms\Components\MultiSelect::make('technicians')
+                    ->relationship('technicians', 'name')
+                    ->label('Técnicos Asignados')
+                    ->options(function () {
+                        return User::whereHas('roles', function ($query) {
+                            $query->where('name', 'Técnico');
+                        })->pluck('name', 'id')->toArray();
+                    })
+                    ->label('Seleccionar Técnicos')
+                    
+                    ,
 
                     // Campo "Coordinador de Proyecto" (solo usuarios con rol de coordinador)
                     Forms\Components\Select::make('coordinator_id')
@@ -165,6 +178,26 @@ class ProjectResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+
+        // ->query(function (Builder $query) {
+        //     $user = auth()->user();
+
+        //     if ($user->hasRole('cliente')) {
+        //         return $query->where('customer_id', $user->customer->id);
+        //     }
+
+        //     if ($user->hasRole('técnico')) {
+        //         return $query->whereHas('technicians', function ($query) use ($user) {
+        //             $query->where('id', $user->id);
+        //         });
+        //     }
+
+        //     if ($user->hasRole('coordinador')) {
+        //         return $query->where('assigned_coordinator', $user->id);
+        //     }
+
+        //     return $query;
+        // })
             ->columns([
                 Tables\Columns\TextColumn::make('nombre'),
                 Tables\Columns\TextColumn::make('customer.name')->label('Cliente'),
@@ -201,7 +234,18 @@ class ProjectResource extends Resource
                         return 'Ninguno';
                     })
                     ->html(),
-                Tables\Columns\TextColumn::make('technician.name')->label('Técnico Asignado'),
+                    Tables\Columns\TextColumn::make('technicians.name')
+                    ->label('Técnicos Asignados')
+                    ->formatStateUsing(function ($state, $record) {
+                        // Accedemos a la relación "technicians" desde el proyecto (record)
+                        $technicians = $record->technicians;
+
+                        if ($technicians->isNotEmpty()) {
+                            return $technicians->pluck('name')->implode(', ');
+                        }
+
+                        return 'Sin técnicos asignados';
+                    }),
                 Tables\Columns\TextColumn::make('coordinator.name')->label('Coordinador del Proyecto'),
             ])
             ->filters([

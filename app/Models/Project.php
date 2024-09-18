@@ -34,11 +34,15 @@ class Project extends Model
         return $this->belongsTo(Customer::class);
     }
 
-    public function technician()
-    {
-        return $this->belongsTo(User::class, 'technician_id');
-    }
+    // public function technician()
+    // {
+    //     return $this->belongsTo(User::class, 'technician_id');
+    // }
 
+    public function technicians()
+    {
+        return $this->belongsToMany(User::class, 'project_technician', 'project_id', 'technician_id');
+    }
     // Relación con coordinador (usuario con rol de coordinador)
     public function coordinator()
     {

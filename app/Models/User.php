@@ -50,4 +50,10 @@ class User extends Authenticatable
     {
         return $this->hasOne(Customer::class, 'name', 'name'); // Relaciona el nombre del cliente con el nombre del usuario
     }
+
+    public function projectsAsTechnician()
+    {
+        return $this->belongsToMany(Project::class, 'project_technician', 'technician_id', 'project_id');
+    }
+    
 }
