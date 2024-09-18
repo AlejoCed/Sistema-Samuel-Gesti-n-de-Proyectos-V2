@@ -16,17 +16,32 @@ class Project extends Model
         'budget',
         'quote_files',
         'plan_files',
+        'report_files',        // Añadimos el campo de informes y reportes
+        'technician_id',       // Técnico asignado
+        'coordinator_id', 
         'notes',
     ];
 
     protected $casts = [
         'quote_files' => 'array',
         'plan_files' => 'array',
+        'report_files' => 'array',
         'budget' => 'decimal:2', // Si deseas mantener el formato decimal
     ];
 
     public function customer()
     {
         return $this->belongsTo(Customer::class);
+    }
+
+    public function technician()
+    {
+        return $this->belongsTo(User::class, 'technician_id');
+    }
+
+    // Relación con coordinador (usuario con rol de coordinador)
+    public function coordinator()
+    {
+        return $this->belongsTo(User::class, 'coordinator_id');
     }
 }

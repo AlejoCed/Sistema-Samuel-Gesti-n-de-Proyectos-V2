@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\ProjectResource\Pages;
 use App\Filament\Resources\ProjectResource\RelationManagers;
 use App\Models\Project;
+use App\Models\User;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -46,7 +47,16 @@ class ProjectResource extends Resource
                 });
         }
 
-        // Si no es un cliente, retorna todos los proyectos
+        if ($user->hasRole('Técnico')) {
+            return parent::getEloquentQuery()->where('technician_id', $user->id);
+        }
+
+        // Si el usuario tiene el rol de "coordinador", filtrar los proyectos donde está asignado como coordinador.
+        if ($user->hasRole('Coordinador')) {
+            return parent::getEloquentQuery()->where('coordinator_id', $user->id);
+        }
+
+        // Si no es un cliente, técnico o coordinador, retorna todos los proyectos
         return parent::getEloquentQuery();
     }
 
@@ -119,7 +129,31 @@ class ProjectResource extends Resource
                     ->openable()->uploadingMessage('Subiendo planos...')
                     ->disabled(fn() => auth()->user()->hasRole('Técnico'))
                      ,
+// Campo para "Informes y Reportes"
+                    Forms\Components\FileUpload::make('report_files')
+                    ->multiple()
+                    ->directory('uploads/reports')
+                    ->preserveFilenames()
+                    ->acceptedFileTypes(['application/pdf'])
+                    ->label('Informes y Reportes'),
 
+                    // Campo "Técnico Asignado" (solo usuarios con rol de técnico)
+                    Forms\Components\Select::make('technician_id')
+                    ->label('Técnico Asignado')
+                    ->relationship('technician', 'name')
+                    ->options(
+                        User::role('Técnico')->pluck('name', 'id') // Solo usuarios con el rol de técnico
+                    )
+                    ->required(),
+
+                    // Campo "Coordinador de Proyecto" (solo usuarios con rol de coordinador)
+                    Forms\Components\Select::make('coordinator_id')
+                    ->label('Coordinador del Proyecto')
+                    ->relationship('coordinator', 'name')
+                    ->options(
+                        User::role('Coordinador')->pluck('name', 'id') // Solo usuarios con el rol de coordinador
+                    )
+                    ->required(),
                 Forms\Components\Textarea::make('notes')
                     ->label('Notas')
                     ->rows(3)
@@ -167,6 +201,8 @@ class ProjectResource extends Resource
                         return 'Ninguno';
                     })
                     ->html(),
+                Tables\Columns\TextColumn::make('technician.name')->label('Técnico Asignado'),
+                Tables\Columns\TextColumn::make('coordinator.name')->label('Coordinador del Proyecto'),
             ])
             ->filters([
                 //

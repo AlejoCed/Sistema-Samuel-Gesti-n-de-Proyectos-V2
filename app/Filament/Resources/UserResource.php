@@ -69,12 +69,12 @@ class UserResource extends Resource
             
             // ...
         ])
-        ->filters([
-            Tables\Filters\Filter::make('verified')
-                ->query(fn (Builder $query): Builder => $query->whereNotNull('email_verified_at')),
-            // ...
+        // ->filters([
+        //     Tables\Filters\Filter::make('verified')
+        //         ->query(fn (Builder $query): Builder => $query->whereNotNull('email_verified_at')),
+        //     // ...
             
-        ])
+        // ])
             ->actions([
                 Tables\Actions\EditAction::make()->label('Editar'),
                 Tables\Actions\DeleteAction::make()->label('Eliminar'),
